@@ -1,0 +1,67 @@
+debug: true
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  #tomcat设置
+  tomcat:
+    accesslog:
+      buffered: true
+      directory: logs
+      enabled: true
+      file-date-format: .yyyy-MM-dd
+      pattern: common
+      prefix: tomcat_access_log
+      rename-on-rotate: false
+      request-attributes-enabled: false
+      rotate: true
+      suffix: .log
+
+#日志设置
+logging:
+  level:
+    cn.edu.cqupt.nmid.passloveserver.controller: info
+  path: logs
+  pattern:
+    console: "%d{HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} ** [%thread] ** %-5level ** %logger{50}** %msg%n"
+
+spring:
+
+  #数据源配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/passlove?useSSL=false&amp;useUnicode=true&amp;characterEncoding=utf8
+    username: root
+    password: Aa123123
+    driver-class-name: com.mysql.jdbc.Driver
+    #连接池配置
+    type: org.apache.commons.dbcp2.BasicDataSource #使用dbcp2连接池
+    dbcp2:
+      max-wait-millis: 10000
+      max-total: 200    #最大连接
+      min-idle: 1       #最小空闲连接
+      max-idle: 5       #最大空闲连接5
+      initial-size: 5   #初始连接
+
+  #邮件设置
+  mail:
+    host: smtp.qq.com             #邮件服务器主机名
+    protocol: smtp                #设置邮箱发送的协议
+    username: 243536237@qq.com     #用户名
+    password: 29f6b1d387fede85    #密码
+    default-encoding: utf-8       #默认编码
+    properties:
+      mail:
+        smtp:
+          ssl:
+            enable: true
+
+  #sevlet设置
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 20MB
+
+mybatis:
+  mapper-locations: classpath:cn/edu/cqupt/nmid/passlove/v2/dao/mapper/*Mapper.xml
