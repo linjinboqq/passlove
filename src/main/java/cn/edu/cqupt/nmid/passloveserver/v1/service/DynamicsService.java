@@ -51,4 +51,16 @@ public interface DynamicsService {
     public List<Dynamics> searchDynamics(String keyword, Integer losttype, Integer typeid, Integer placeid, Integer start, Integer end) throws Exception;
 
 
+    /**
+     * @description 获取指定数量的动态
+     * @param start
+     * @param end
+     * @param losttype 丢失或者招领 0 丢失 | 1 招领
+     * @return 返回动态
+     * */
+
+
+
+
+
 }

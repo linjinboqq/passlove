@@ -53,4 +53,9 @@ public interface UserDao {
     public void updatePhoneNumber(@Param("user") User user, @Param("phonenumber") String phonenumber);
 
 
+//    by linjinbo
+    @Update("update user set password=#{password} where username=#{user.username}")
+//    @SelectKey(statement = "select phonenumber from user where username=#{user.username}", keyProperty = "user.phonenumber", before = false, resultType = String.class)
+    public void updatePassword(@Param("user") User user, @Param("password") String password);
+
 }

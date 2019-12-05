@@ -68,4 +68,11 @@ public class CommentServiceImpl implements CommentService {
             throw new Exception();
         }
     }
+
+
+
+//bylinjinbo
+    public int getisread(int commentid) {
+        return 1;
+    }
 }

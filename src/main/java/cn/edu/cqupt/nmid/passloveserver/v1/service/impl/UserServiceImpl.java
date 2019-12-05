@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.util.UUID;
 
 /****
  * @author:MrWangx
@@ -92,4 +93,10 @@ public class UserServiceImpl implements UserService {
     public void updateUserPhonenumber(User user, String phonenumber) throws Exception {
         userDao.updatePhoneNumber(user, phonenumber);
     }
+//by linjinbo
+
+    public void updateUserPassword(User user, String password) throws Exception {
+        userDao.updatePassword(user,password);
+    }
+
 }

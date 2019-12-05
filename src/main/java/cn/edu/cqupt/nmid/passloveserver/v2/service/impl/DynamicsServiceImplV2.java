@@ -4,6 +4,7 @@ import cn.edu.cqupt.nmid.passloveserver.v1.pojo.Dynamics;
 import cn.edu.cqupt.nmid.passloveserver.v1.pojo.User;
 import cn.edu.cqupt.nmid.passloveserver.v1.service.DynamicsService;
 import cn.edu.cqupt.nmid.passloveserver.v2.dao.mapper.DynamicsMapper;
+import cn.edu.cqupt.nmid.passloveserver.v2.pojo.DynamicsExample;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -65,6 +66,14 @@ public class DynamicsServiceImplV2 implements DynamicsService {
      */
     @Override
     public List<Dynamics> searchDynamics(String keyword, Integer losttype, Integer typeid, Integer placeid, Integer start, Integer end) throws Exception {
+        return null;
+    }
+
+
+    public List<Dynamics> getDynamicsByLosttypeAndYesterday(int start, int end, int losttype, String yesterday) throws Exception {
+        DynamicsExample dynamicsExample = new DynamicsExample();
+        dynamicsExample.createCriteria().andPublishtimeEqualTo(yesterday);
+        List<cn.edu.cqupt.nmid.passloveserver.v2.pojo.Dynamics> dynamics= dynamicsMapper.selectByExample(dynamicsExample);
         return null;
     }
 }

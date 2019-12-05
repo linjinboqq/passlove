@@ -7,6 +7,10 @@ import cn.edu.cqupt.nmid.passloveserver.v1.service.DynamicsService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 /****
@@ -31,6 +35,62 @@ public class DynamicsServiceImpl implements DynamicsService {
     public List<Dynamics> getDynamicsByLosttype(int start, int end, int losttype) throws Exception {
         return dynamicsDao.getDynamics(losttype, start, end);
     }
+
+
+
+//bylinjinbo
+    public List<Dynamics> getDynamicsByLosttypeAndYesterday(int start, int end, int losttype,int yesterday) throws Exception {
+      String yesterday2=new String();
+       if(yesterday==0){
+           Date date =new Date(); //取时间
+           Calendar calendar = new GregorianCalendar();
+           calendar.setTime(date);
+           calendar.add(calendar.DATE,-1); //把日期往后增加一天,整数  往后推,负数往前移动
+           date=calendar.getTime(); //这个时间就是日期往后推一天的结果
+           SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
+           String format = simpleDateFormat.format(date);
+           System.out.println(format);
+           yesterday2=format;
+           yesterday2=yesterday2+"%";
+           return dynamicsDao.getDynamicsByYesterday(losttype, start, end,yesterday2);
+//转换日期
+
+       }else if(yesterday==1){
+           Date date =new Date(); //取时间
+           Calendar calendar = new GregorianCalendar();
+           calendar.setTime(date);
+//           calendar.add(calendar.DATE,-1); //把日期往后增加一天,整数  往后推,负数往前移动
+           date=calendar.getTime(); //这个时间就是日期往后推一天的结果
+           SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
+           String format = simpleDateFormat.format(date);
+           System.out.println(format);
+           yesterday2=format;
+           yesterday2=yesterday2+"%";
+
+           return dynamicsDao.getDynamicsByYesterday(losttype, start, end,yesterday2);
+
+       }else if (yesterday==2){
+           Date date =new Date(); //取时间
+           Calendar calendar = new GregorianCalendar();
+           calendar.setTime(date);
+//           calendar.add(calendar.DATE,1); //把日期往后增加一天,整数  往后推,负数往前移动
+           calendar.add(calendar.DATE,-1); //把日期往后增加一天,整数  往后推,负数往前移动
+           date=calendar.getTime(); //这个时间就是日期往后推一天的结果
+           SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
+           String format = simpleDateFormat.format(date);
+           System.out.println(format);
+           yesterday2=format;
+           return dynamicsDao.getDynamicsByYesterday2(losttype, start, end,yesterday2);
+       }
+//
+        return null;
+    }
+
+
+
+
+//    bylinjinbo
+
 
     /**
      * @param lostid 失物的id

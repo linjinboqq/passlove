@@ -1,7 +1,7 @@
 debug: true
 
 server:
-  port: 8080
+  port: 80
   servlet:
     context-path: /
   #tomcat设置
@@ -31,9 +31,9 @@ spring:
 
   #数据源配置
   datasource:
-    url: jdbc:mysql://localhost:3306/passlove?useSSL=false&amp;useUnicode=true&amp;characterEncoding=utf8
+    url: jdbc:mysql://47.102.206.17:3306/passlove?useSSL=false&amp;useUnicode=true&amp;characterEncoding=utf8
     username: root
-    password: Aa123123
+    password: MyNewPass4!
     driver-class-name: com.mysql.jdbc.Driver
     #连接池配置
     type: org.apache.commons.dbcp2.BasicDataSource #使用dbcp2连接池
@@ -44,12 +44,12 @@ spring:
       max-idle: 5       #最大空闲连接5
       initial-size: 5   #初始连接
 
-  #邮件设置
+#  邮件设置
   mail:
     host: smtp.qq.com             #邮件服务器主机名
     protocol: smtp                #设置邮箱发送的协议
     username: 243536237@qq.com     #用户名
-    password: 29f6b1d387fede85    #密码
+    password: txtpxujxfzmsbjhj  #密码
     default-encoding: utf-8       #默认编码
     properties:
       mail:
@@ -62,6 +62,11 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 20MB
-
 mybatis:
   mapper-locations: classpath:cn/edu/cqupt/nmid/passlove/v2/dao/mapper/*Mapper.xml
+
+sms:
+  accessKeyId:
+    LTAI4FeKTXuVcsmA77uScp95
+  secret:
+    xvVZUn3UPYwuoomoKH4fJVz9vNLdQx

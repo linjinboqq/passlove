@@ -2,8 +2,13 @@ package cn.edu.cqupt.nmid.passloveserver.v1.web.controller;
 
 import cn.edu.cqupt.nmid.passloveserver.v1.pojo.*;
 import cn.edu.cqupt.nmid.passloveserver.v1.service.*;
+import cn.edu.cqupt.nmid.passloveserver.v1.service.impl.CommentServiceImpl;
+import cn.edu.cqupt.nmid.passloveserver.v1.service.impl.DynamicsServiceImpl;
+import cn.edu.cqupt.nmid.passloveserver.v1.service.impl.LostServiceImpl;
+import cn.edu.cqupt.nmid.passloveserver.v1.service.impl.UserServiceImpl;
 import cn.edu.cqupt.nmid.passloveserver.v1.service.mail.MailService;
 import cn.edu.cqupt.nmid.passloveserver.util.CodeCheck;
+import cn.edu.cqupt.nmid.passloveserver.v1.service.mail.MailService2;
 import cn.edu.cqupt.nmid.passloveserver.v1.web.listener.LoginSessionContext;
 import cn.edu.cqupt.nmid.passloveserver.v1.web.listener.RegisterSessionContext;
 import com.alibaba.fastjson.JSON;
@@ -11,6 +16,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,6 +32,10 @@ import java.util.List;
 public class PassLove {
 
     private Logger logger = LoggerFactory.getLogger(PassLove.class);
+    @Resource
+    UserServiceImpl UserServiceImpl;
+    @Resource
+    LostServiceImpl lostserviceimpl;
 
     @Resource
     private LoginSessionContext loginSessionContext;
@@ -50,6 +60,14 @@ public class PassLove {
 
     @Resource
     private CommentService commentService;
+    @Autowired
+    DynamicsServiceImpl DynamicsServiceImpl;
+
+    @Autowired
+    MailService2 mailService2;
+
+    @Autowired
+    CommentServiceImpl commentServiceImpl;
 
 
 
@@ -199,12 +217,12 @@ public class PassLove {
         String JSESSIONID = null;
         int status = 200;
         try {
-            if (userService.isRegistered(mail)) { //如果用户已经注册
-                return "{\"status\":201}";
-            }
+//            if (userService.isRegistered(mail)) { //如果用户已经注册
+//                return "{\"status\":201}";
+//            }
             String checkcode = CodeCheck.getCheckCode(5); //获取验证码
             //发送验证码
-            mailService.sendMail(new String[]{mail}, "递爱验证码", "<h2>您好,您的注册验证码是" + checkcode + "</h2>");
+            mailService.sendMail(new String[]{mail}, "递爱验证码", "<h2>您好,您的验证码是" + checkcode + "</h2>");
             session.setMaxInactiveInterval(120);
             session.setAttribute("checkcode", checkcode);
             session.setAttribute("username", mail);
@@ -213,6 +231,7 @@ public class PassLove {
             JSESSIONID = session.getId();
         } catch (Exception e) {
             status = 400;
+            e.printStackTrace();
         }
         returnData.put("status", status);
         returnData.put("JSESSIONID", session.getId());
@@ -263,9 +282,40 @@ public class PassLove {
             HttpSession session = registerSessionContext.getSession(JSESSIONID);
             if ((boolean) session.getAttribute("ischecked")) { //验证是否已经验证
                 status = 200;
-                User user = new User((String) session.getAttribute("username"), password, nickname, "default.jpg", phonenumber);
-
+                User user = new User((String) session.getAttribute("username"),
+                        password, nickname, "default.jpg", phonenumber);
                 userService.register(user);
+            }
+//            if (userService.isRegistered(session.getAttribute(""))) { //如果用户已经注册
+//                return "{\"status\":201}";
+//            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            status = 400;
+        }
+        returnData.put("status", status);
+        return returnData.toJSONString();
+    }
+
+
+//bylinjinbo
+
+    @RequestMapping(path = "/passlove/updatepassword", method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
+    @ResponseBody
+    public String updatepassword(@RequestParam String password, @RequestParam String nickname,
+                                 @RequestParam String phonenumber, @RequestParam String JSESSIONID) throws Exception {
+        JSONObject returnData = null; //返回信息
+        int status = 400;
+        try {
+            returnData = new JSONObject(true);
+            HttpSession session = registerSessionContext.getSession(JSESSIONID);
+            if ((boolean) session.getAttribute("ischecked")) { //验证是否已经验证
+                status = 200;
+//                User user = new User((String) session.getAttribute("username"),
+//                        password, nickname, "default.jpg", phonenumber);
+                User username = new User((String) session.getAttribute("username"), password, nickname, "default.jpg", phonenumber);
+                UserServiceImpl.updateUserPassword(username, password);
+//                userService.register(user);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -274,6 +324,7 @@ public class PassLove {
         returnData.put("status", status);
         return returnData.toJSONString();
     }
+
 
     /**             信息          */
     /*********************************************************************/
@@ -355,17 +406,42 @@ public class PassLove {
         return JSON.toJSONString(returnData, SerializerFeature.WriteMapNullValue);
     }
 
+
+//bylinjinbo
+
+    @RequestMapping(path = "/passlove/dynamics/{losttype}/{date}", method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
+    @ResponseBody
+    public String getDynamicsByDate(@RequestParam String requestData, @PathVariable int losttype, @PathVariable int date) {
+//0昨天 1 今天 2 明天
+        int status = 200;
+        JSONObject returnData = new JSONObject(true);
+        List<Dynamics> dynamics = null;
+        try {
+            JSONObject json = JSON.parseObject(requestData);
+//            dynamics = dynamicsService.getDynamicsByLosttype(json.getInteger("start"), json.getInteger("end"), losttype);
+            dynamics = DynamicsServiceImpl.getDynamicsByLosttypeAndYesterday(json.getInteger("start"), json.getInteger("end"),
+                    losttype, date);
+        } catch (Exception e) {
+            status = 400;
+        }
+        returnData.put("status", status);
+        returnData.put("dynamics", dynamics);
+        return JSON.toJSONString(returnData, SerializerFeature.WriteMapNullValue);
+    }
+
+
     /**
      * 根据id获取动态的信息
+     *
      * @param
-     * */
+     */
     @RequestMapping(path = "/passlove/dynamics/get", method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
     @ResponseBody
     public String getDynamics(@RequestParam Integer lostid) {
         int status = 200;
         JSONObject returnData = new JSONObject(true);
         Dynamics dynamics = null;
-        try{
+        try {
             dynamics = dynamicsService.getDynamicsByLostID(lostid);
         } catch (Exception e) {
             status = 400;
@@ -378,8 +454,9 @@ public class PassLove {
 
     /**
      * 获取我评论过的动态
+     *
      * @param JSESSIONID
-     * */
+     */
     @RequestMapping(path = {"/passlove/dynamics/commented"}, method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
     @ResponseBody
     public String getDynamicsCommented(@RequestParam String JSESSIONID) {
@@ -397,7 +474,6 @@ public class PassLove {
         returnData.put("dynamics", dynamics);
         return JSON.toJSONString(returnData, SerializerFeature.WriteMapNullValue);
     }
-
 
 
     /**                     搜索                      */
@@ -454,8 +530,10 @@ public class PassLove {
         int status = 200;
         JSONObject returnData = new JSONObject(true);
         try {
+
             User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
             Lost lost = JSON.toJavaObject(JSON.parseObject(thelost), Lost.class);
+            System.out.println(lost);
             lostService.publishLost(user, lost, photos, session.getServletContext().getRealPath("/WEB-INF/img/thelost"));
         } catch (Exception e) {
             e.printStackTrace();
@@ -472,8 +550,9 @@ public class PassLove {
 
     /**
      * 获取评论消息
+     *
      * @param lostid 失物的id
-     * */
+     */
     @RequestMapping(path = {"/passlove/comment/get"}, method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
     @ResponseBody
     public String getComments(@RequestParam Integer lostid) {
@@ -493,8 +572,9 @@ public class PassLove {
 
     /**
      * 获取我评论过的失物的所有id
+     *
      * @param JSESSIONID
-     * */
+     */
     @RequestMapping(path = {"/passlove/comment/lostids"}, method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
     @ResponseBody
     public String getLostIDs(@RequestParam String JSESSIONID) {
@@ -515,7 +595,7 @@ public class PassLove {
 
     /**
      * 发布评论
-     * */
+     */
     @RequestMapping(path = {"/passlove/comment/publish"}, method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
     @ResponseBody
     public String publishComments(@RequestParam String JSESSIONID, @RequestParam String requestData) {
@@ -527,7 +607,7 @@ public class PassLove {
             Comment comment = JSON.toJavaObject(json.getJSONObject("comment"), Comment.class);
             commentService.publishComment(user.getUsername(), json.getInteger("lostid"), comment);
         } catch (Exception e) {
-            e.printStackTrace();;
+            e.printStackTrace();
             status = 400;
         }
         returnData.put("status", status);
@@ -668,5 +748,116 @@ public class PassLove {
         returnData.put("data", data);
         return JSON.toJSONString(returnData, SerializerFeature.WriteNullBooleanAsFalse);
     }
+
+
+    //    bylinjinbo 更新 是否处理
+    @RequestMapping(path = "/passlove/updateishandle/{lostid}", method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
+    @ResponseBody
+    public String Updateishandle(@RequestParam String JSESSIONID, @PathVariable int lostid) {
+        System.out.println(lostid);
+        JSONObject returnData = new JSONObject(true);
+        int status = 200;
+        List<Lost> data = null;
+        try {
+            User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
+            boolean updateishandle = lostserviceimpl.Updateishandle(lostid);
+        } catch (Exception e) {
+            e.printStackTrace();
+            status = 400;
+        }
+        returnData.put("status", status);
+        return JSON.toJSONString(returnData, SerializerFeature.WriteNullBooleanAsFalse);
+    }
+
+
+    //bylinjinbo 更新
+
+    @RequestMapping(path = "/passlove/UpdateLostById", method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
+    @ResponseBody
+    public String UpdateLostById(@RequestParam String JSESSIONID, @RequestParam String thelost,
+                                 @RequestParam(name = "photos", required = false) MultipartFile[] photos, HttpSession session,
+                                 @RequestParam Integer lostid) {
+        int status = 200;
+        JSONObject returnData = new JSONObject(true);
+        try {
+
+            User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
+            Lost lost = JSON.toJavaObject(JSON.parseObject(thelost), Lost.class);
+            System.out.println(lost);
+            lostserviceimpl.publishLostUpdate(user, lost, photos,
+                    session.getServletContext().getRealPath("/WEB-INF/img/thelost"), lostid);
+//                lostService.publishLost(user, lost, photos, session.getServletContext().getRealPath("/WEB-INF/img/thelost"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            status = 400;
+        }
+        returnData.put("status", status);
+        return returnData.toJSONString();
+    }
+
+    //bylinjinbo 删除
+    @RequestMapping(path = "/passlove/deletelostbyid/{lostid}", method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
+    @ResponseBody
+    public String deleteLostById(@RequestParam String JSESSIONID, @PathVariable int lostid) {
+        System.out.println(lostid);
+        JSONObject returnData = new JSONObject(true);
+        int status = 200;
+        List<Lost> data = null;
+        try {
+            User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
+            lostserviceimpl.deleteLostById(lostid);
+        } catch (Exception e) {
+            e.printStackTrace();
+            status = 400;
+        }
+        returnData.put("status", status);
+        return JSON.toJSONString(returnData, SerializerFeature.WriteNullBooleanAsFalse);
+    }
+
+
+//    bylinjinbo 发送短信 捡到失物的人
+
+    @RequestMapping(path = "/passlove/sendmessage", method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
+    @ResponseBody
+    public String sendMessage(@RequestParam String JSESSIONID, @RequestParam int lostid) {
+        System.out.println(lostid);
+        JSONObject returnData = new JSONObject(true);
+        int status = 200;
+        List<Lost> data = null;
+        try {
+            User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
+            lostserviceimpl.sendmessage(user,lostid);
+//            lostserviceimpl.deleteLostById(lostid);
+        } catch (Exception e) {
+            e.printStackTrace();
+            status = 400;
+        }
+        returnData.put("status", status);
+        return JSON.toJSONString(returnData, SerializerFeature.WriteNullBooleanAsFalse);
+    }
+
+//bylinjinbo
+    @RequestMapping(path = "/passlove/getmessageisread", method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
+    @ResponseBody
+    public String getMessageIsread(@RequestParam String JSESSIONID, @RequestParam int commentid) {
+            System.out.println(commentid);
+            JSONObject returnData = new JSONObject(true);
+            int status = 200;
+            List<Lost> data = null;
+            try {
+                User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
+//                lostserviceimpl.sendmessage(user, lostid);
+              int result= commentServiceImpl.getisread(commentid);
+
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                status = 400;
+            }
+            returnData.put("status", status);
+            return JSON.toJSONString(returnData, SerializerFeature.WriteNullBooleanAsFalse);
+        }
+
+
 
 }

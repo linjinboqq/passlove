@@ -83,6 +83,7 @@ public interface LostDao {
     @SelectKey(statement = "select last_insert_id()", keyProperty = "lost.id", before = false, resultType = Integer.class)
     public void insertLost(@Param("lost") Lost lost) throws Exception;
 
+
     /**
      * <p>添加用户——失物</p>
      * @param user 用户
@@ -98,6 +99,18 @@ public interface LostDao {
     @Update("update thelost set photo=#{thelost.photo} where id=#{thelost.id}")
     public void updatePhoto(@Param("thelost") Lost thelost);
 
+//bylinjinbo
+    @Update("update thelost set ishandled=1 where id=#{lostid}")
+    public boolean updateHandle(@Param("lostid") int lostid);
+
+//    bylinjinbo  更改失物
+
+//      lostDao.updateLost(lostid, lost);
+
+//    @Insert("insert into thelost(typeid,losttype,title,description,placeid,publishtime,losttime,photo,ishandled) values" +
+//            "(#{lost.typeid},#{lost.losttype},#{lost.title},#{lost.description},#{lost.placeid},#{lost.publishtime},#{lost.losttime},#{lost.photo},#{lost.ishandled})")
+//    @SelectKey(statement = "select last_insert_id()", keyProperty = "lost.id", before = false, resultType = Integer.class)
+//    public void insertLost(@Param("lost") Lost lost) throws Exception;
 
 
 

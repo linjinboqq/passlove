@@ -5,6 +5,7 @@ import com.alibaba.fastjson.annotation.JSONField;
 
 public class Lost {
 
+
     @JSONField(ordinal = 0)
     private Integer id;
     @JSONField(ordinal = 1)
