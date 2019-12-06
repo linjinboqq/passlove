@@ -37,4 +37,15 @@ public interface CommentDao {
     @Insert("insert into comment_reply(username, commentid, ucid, reply_id) values(#{username},#{commentid},#{ucid},#{reply_id})")
     void replyComment(@Param("username") String username, @Param("commentid") int commentId, @Param("ucid") Integer ucId, @Param("reply_id") Integer replyId);
 
+
+
+//bylinjinbo
+    @Select("SELECT isread FROM commentisread WHERE commentid =#{commentid}")
+    int selectisread(@Param("commentid") int commentid);
+
+    @Update("UPDATE commentisread SET  isread= #{isread} WHERE commentid = #{commentid}")
+    int updateisread(@Param("isread") int isread,@Param("commentid") int commentid );
+
+    @Insert("INSERT INTO commentisread(commentid,isread) VALUES (#{commentid},0);")
+    int insertisread(@Param("commentid") int commentid);
 }

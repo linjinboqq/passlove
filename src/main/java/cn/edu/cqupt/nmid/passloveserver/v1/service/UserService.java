@@ -18,7 +18,7 @@ public interface UserService {
      * */
     public User login(String username, String password) throws Exception;
 
-
+    public User login2(int snumber, String password) throws Exception;
     /**
      * @description 用户注册
      * @param user 注册用户的实体
@@ -56,5 +56,6 @@ public interface UserService {
      * @param phonenumber 电话号码
      * */
     public void updateUserPhonenumber(User user, String phonenumber) throws Exception;
+
 
 }

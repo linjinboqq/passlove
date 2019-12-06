@@ -33,6 +33,13 @@ public class UserServiceImpl implements UserService {
         return userDao.getUserByUP(username, password);
     }
 
+
+    @Override
+    public User login2(int snumber, String password) throws Exception {
+       String  username=  userDao.selectUserNameBysNumber(snumber);
+        return userDao.getUserByUP(username, password);
+    }
+
     /**
      * @param user 注册用户的实体
      * @description 用户注册
@@ -41,6 +48,13 @@ public class UserServiceImpl implements UserService {
     public void register(User user) throws Exception {
         userDao.insertUser(user);
     }
+
+
+    public void register2(User user ,int snumber) throws Exception {
+        userDao.insertUser(user);
+        userDao.insertsnumber(user.getUsername(),snumber);
+    }
+
 
     /**
      * @param mail 邮箱是否被注册
@@ -93,10 +107,13 @@ public class UserServiceImpl implements UserService {
     public void updateUserPhonenumber(User user, String phonenumber) throws Exception {
         userDao.updatePhoneNumber(user, phonenumber);
     }
+
 //by linjinbo
 
-    public void updateUserPassword(User user, String password) throws Exception {
-        userDao.updatePassword(user,password);
+    public int updateUserPassword(User user, String password) throws Exception {
+        int i = userDao.updatePassword(user, password);
+        return i;
+
     }
 
 }

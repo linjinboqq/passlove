@@ -9,10 +9,7 @@ import cn.edu.cqupt.nmid.passloveserver.v1.service.LostService;
 import cn.edu.cqupt.nmid.passloveserver.v2.dao.mapper.ThelostMapper;
 import cn.edu.cqupt.nmid.passloveserver.v2.dao.mapper.UserLostMapper;
 import cn.edu.cqupt.nmid.passloveserver.v2.dao.mapper.UserMapper;
-import cn.edu.cqupt.nmid.passloveserver.v2.pojo.Thelost;
-import cn.edu.cqupt.nmid.passloveserver.v2.pojo.UserExample;
-import cn.edu.cqupt.nmid.passloveserver.v2.pojo.UserLost;
-import cn.edu.cqupt.nmid.passloveserver.v2.pojo.UserLostExample;
+import cn.edu.cqupt.nmid.passloveserver.v2.pojo.*;
 import org.apache.ibatis.annotations.Update;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
@@ -169,7 +166,7 @@ public class LostServiceImpl implements LostService {
         String description = lost.getDescription();
         thelost.setDescription(description);
         String publishtime = lost.getPublishtime();
-        thelost.setPublishtime(publishtime);
+//        thelost.setPublishtime(publishtime);
         String losttime = lost.getLosttime();
         String photo = lost.getPhoto();
         Integer ishandled = lost.getIshandled();
@@ -183,6 +180,8 @@ public class LostServiceImpl implements LostService {
             files = new File[length];
             lost.setPublishtime(sdf.format(System.currentTimeMillis()));
 //        lostDao.insertLost(lost);
+//            ThelostExample thelostExample = new ThelostExample();
+//            thelostExample.createCriteria()
             thelostMapper.updateByPrimaryKeySelective(thelost);
             for (int i = 0; i < length; i++) {
                 if (!photos[i].isEmpty()) {

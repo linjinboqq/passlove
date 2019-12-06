@@ -68,8 +68,8 @@ public class PassLove {
 
     @Autowired
     CommentServiceImpl commentServiceImpl;
-
-
+    @Autowired
+    UserServiceImpl userServiceImpl;
 
 
     /**                         用户相关*                         /
@@ -223,7 +223,7 @@ public class PassLove {
             String checkcode = CodeCheck.getCheckCode(5); //获取验证码
             //发送验证码
             mailService.sendMail(new String[]{mail}, "递爱验证码", "<h2>您好,您的验证码是" + checkcode + "</h2>");
-            session.setMaxInactiveInterval(120);
+            session.setMaxInactiveInterval(600);
             session.setAttribute("checkcode", checkcode);
             session.setAttribute("username", mail);
             //将该session存入
@@ -274,17 +274,19 @@ public class PassLove {
     @RequestMapping(path = "/passlove/register", method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
     @ResponseBody
     public String register(@RequestParam String password, @RequestParam String nickname,
-                           @RequestParam String phonenumber, @RequestParam String JSESSIONID) throws Exception {
+                           @RequestParam String phonenumber, @RequestParam String JSESSIONID,@RequestParam int snumber) throws Exception {
         JSONObject returnData = null; //返回信息
         int status = 400;
         try {
             returnData = new JSONObject(true);
             HttpSession session = registerSessionContext.getSession(JSESSIONID);
+            System.out.println(session);
             if ((boolean) session.getAttribute("ischecked")) { //验证是否已经验证
                 status = 200;
                 User user = new User((String) session.getAttribute("username"),
                         password, nickname, "default.jpg", phonenumber);
-                userService.register(user);
+//                userService.register(user);原来的注册
+                userServiceImpl.register2(user,snumber);//加了学号的注册
             }
 //            if (userService.isRegistered(session.getAttribute(""))) { //如果用户已经注册
 //                return "{\"status\":201}";
@@ -298,25 +300,21 @@ public class PassLove {
     }
 
 
-//bylinjinbo
+//bylinjinbo改密码
 
     @RequestMapping(path = "/passlove/updatepassword", method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
     @ResponseBody
-    public String updatepassword(@RequestParam String password, @RequestParam String nickname,
-                                 @RequestParam String phonenumber, @RequestParam String JSESSIONID) throws Exception {
+    public String updatepassword(@RequestParam String password, @RequestParam String JSESSIONID) throws Exception {
         JSONObject returnData = null; //返回信息
         int status = 400;
         try {
             returnData = new JSONObject(true);
             HttpSession session = registerSessionContext.getSession(JSESSIONID);
-            if ((boolean) session.getAttribute("ischecked")) { //验证是否已经验证
-                status = 200;
-//                User user = new User((String) session.getAttribute("username"),
-//                        password, nickname, "default.jpg", phonenumber);
-                User username = new User((String) session.getAttribute("username"), password, nickname, "default.jpg", phonenumber);
-                UserServiceImpl.updateUserPassword(username, password);
-//                userService.register(user);
-            }
+//            if ((boolean) session.getAttribute("ischecked")) { //验证是否已经验证
+            status = 200;
+            User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
+            int i = userServiceImpl.updateUserPassword(user, password);
+//            }
         } catch (Exception e) {
             e.printStackTrace();
             status = 400;
@@ -606,6 +604,7 @@ public class PassLove {
             User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
             Comment comment = JSON.toJavaObject(json.getJSONObject("comment"), Comment.class);
             commentService.publishComment(user.getUsername(), json.getInteger("lostid"), comment);
+
         } catch (Exception e) {
             e.printStackTrace();
             status = 400;
@@ -826,7 +825,7 @@ public class PassLove {
         List<Lost> data = null;
         try {
             User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
-            lostserviceimpl.sendmessage(user,lostid);
+            lostserviceimpl.sendmessage(user, lostid);
 //            lostserviceimpl.deleteLostById(lostid);
         } catch (Exception e) {
             e.printStackTrace();
@@ -836,28 +835,77 @@ public class PassLove {
         return JSON.toJSONString(returnData, SerializerFeature.WriteNullBooleanAsFalse);
     }
 
-//bylinjinbo
+    //bylinjinbo
     @RequestMapping(path = "/passlove/getmessageisread", method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
     @ResponseBody
     public String getMessageIsread(@RequestParam String JSESSIONID, @RequestParam int commentid) {
-            System.out.println(commentid);
-            JSONObject returnData = new JSONObject(true);
-            int status = 200;
-            List<Lost> data = null;
-            try {
-                User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
-//                lostserviceimpl.sendmessage(user, lostid);
-              int result= commentServiceImpl.getisread(commentid);
+        System.out.println(commentid);
+        JSONObject returnData = new JSONObject(true);
+        int status = 200;
+        int recommentid = -1;
+        try {
+            User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
+            recommentid = commentServiceImpl.getisread(commentid);
+        } catch (Exception e) {
+            e.printStackTrace();
+            status = 400;
+        }
+        returnData.put("status", status);
+        returnData.put("recommentid", recommentid);
+        return JSON.toJSONString(returnData, SerializerFeature.WriteNullBooleanAsFalse);
+    }
 
 
-            } catch (Exception e) {
-                e.printStackTrace();
+    //设置消息为已读或者未读
+    @RequestMapping(path = "/passlove/updatemessageisread", method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
+    @ResponseBody
+    public String updateMessageIsread(@RequestParam String JSESSIONID, @RequestParam int commentid, @RequestParam int isread) {
+        System.out.println(commentid);
+        JSONObject returnData = new JSONObject(true);
+        int status = 200;
+        try {
+            User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
+            if (isread == 1 || isread == 0) {
+                commentServiceImpl.updateisread(isread, commentid);
+            } else {
+                throw new RuntimeException();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            status = 400;
+        }
+        returnData.put("status", status);
+        return JSON.toJSONString(returnData, SerializerFeature.WriteNullBooleanAsFalse);
+    }
+
+
+
+
+    @RequestMapping(path = "/passlove/loginIn2", method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
+    @ResponseBody
+    public String userLoginInBySnumber(@RequestParam String requestData, HttpSession session) throws Exception {
+        JSONObject returnData = new JSONObject(true); //返回信息
+        int status = 200;
+        User user = null;
+        try {
+            logger.info(requestData);
+            JSONObject json = JSON.parseObject(requestData);
+//            user = userService.login(json.getString("username"), json.getString("password")); //获取用户实体
+            user = userServiceImpl.login2(json.getInteger("snumber"), json.getString("password")); //获取用户实体
+            if (user != null) { //如果实体不为null
+                session.setAttribute("user", user);
+                session.setMaxInactiveInterval(0); //设置session一直有效
+                loginSessionContext.addSession(session);
+            } else { //如果实体为null
                 status = 400;
             }
-            returnData.put("status", status);
-            return JSON.toJSONString(returnData, SerializerFeature.WriteNullBooleanAsFalse);
+        } catch (Exception e) {
+            e.printStackTrace();
+            status = 400;
         }
-
-
-
+        returnData.put("status", status);
+        returnData.put("user", user);
+        returnData.put("JSESSIONID", session.getId());
+        return JSON.toJSONString(returnData, SerializerFeature.WriteMapNullValue);
+    }
 }

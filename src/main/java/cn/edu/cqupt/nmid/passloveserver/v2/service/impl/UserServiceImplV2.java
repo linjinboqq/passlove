@@ -40,6 +40,11 @@ public class UserServiceImplV2 implements UserService {
 
     }
 
+    @Override
+    public User login2(int snumber, String password) throws Exception {
+        return null;
+    }
+
     /**
      * @param user 注册用户的实体
      * @description 用户注册

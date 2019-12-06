@@ -1,7 +1,7 @@
 debug: true
 
 server:
-  port: 80
+  port: 8080
   servlet:
     context-path: /
   #tomcat设置
@@ -31,7 +31,7 @@ spring:
 
   #数据源配置
   datasource:
-    url: jdbc:mysql://47.102.206.17:3306/passlove?useSSL=false&amp;useUnicode=true&amp;characterEncoding=utf8
+    url: jdbc:mysql://47.102.206.17:3306/passlove?useSSL=false&amp;useUnicode=true&amp;characterEncoding=utf-8
     username: root
     password: MyNewPass4!
     driver-class-name: com.mysql.jdbc.Driver

@@ -52,6 +52,7 @@ public class CommentServiceImpl implements CommentService {
         comment.setTime(sdf.format(System.currentTimeMillis()));
         commentDao.insertComment(comment);
         commentDao.insertUserLostComent(username, lostid, comment.getId());
+        commentDao.insertisread(comment.getId());
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -70,9 +71,12 @@ public class CommentServiceImpl implements CommentService {
     }
 
 
-
-//bylinjinbo
+    //bylinjinbo
     public int getisread(int commentid) {
-        return 1;
+        return commentDao.selectisread(commentid);
+    }
+
+    public int updateisread(int isread,int commentid) {
+        return commentDao.updateisread(isread,commentid);
     }
 }

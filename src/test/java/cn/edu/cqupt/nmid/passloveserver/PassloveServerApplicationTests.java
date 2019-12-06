@@ -181,8 +181,8 @@ public class PassloveServerApplicationTests {
     public void uppassword() throws Exception {
         cn.edu.cqupt.nmid.passloveserver.v1.pojo.User user = new cn.edu.cqupt.nmid.passloveserver.v1.pojo.User();
         user.setUsername("243536237@qq.com");
-//        userService.updateUserNickname(user, "王昊鑫");
-//        userService.updateUserPhonenumber(user, "18996956211");
+        userService.updateUserNickname(user, "王昊发噶的jjhhh");
+        userService.updateUserPhonenumber(user, "18996956211");
         UserServiceImpl.updateUserPassword(user, "123123");
 
     }
