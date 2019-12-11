@@ -17,6 +17,7 @@ import com.alibaba.fastjson.serializer.SerializerFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,6 +26,7 @@ import javax.annotation.Resource;
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.File;
 import java.io.FileInputStream;
 import java.util.List;
 
@@ -146,11 +148,16 @@ public class PassLove {
      * @param name 图片名
      * @description 获取用户头像
      */
-    @RequestMapping(path = {"/passlove/img/user"})
+    @RequestMapping(path = {"/passlove/img/user"},produces = MediaType.IMAGE_PNG_VALUE)
     public void getUserPhoto(@RequestParam String name, HttpServletResponse response, HttpSession session) {
+
         try {
+//            response.setHeader("contentType","image/png");
+            response.setContentType("image/png");
             ImageIO.write(ImageIO.read(new FileInputStream(session.getServletContext().getRealPath("/WEB-INF/img/user/" + name))),
-                    name.substring(name.lastIndexOf(".") + 1, name.length()), response.getOutputStream());
+//            ImageIO.write(ImageIO.read(new FileInputStream("D:/works/Java/passlove-server-master/img/user/20191210220913.png")),
+            name.substring(name.lastIndexOf(".") + 1, name.length()), response.getOutputStream());
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -304,16 +311,25 @@ public class PassLove {
 
     @RequestMapping(path = "/passlove/updatepassword", method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
     @ResponseBody
-    public String updatepassword(@RequestParam String password, @RequestParam String JSESSIONID) throws Exception {
+    public String updatepassword(@RequestParam String password, @RequestParam String username ) throws Exception {
         JSONObject returnData = null; //返回信息
         int status = 400;
         try {
             returnData = new JSONObject(true);
-            HttpSession session = registerSessionContext.getSession(JSESSIONID);
+//            HttpSession session = registerSessionContext.getSession(JSESSIONID);
 //            if ((boolean) session.getAttribute("ischecked")) { //验证是否已经验证
             status = 200;
-            User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
+//            User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
+            User user = new User();
+            user.setUsername(username);
             int i = userServiceImpl.updateUserPassword(user, password);
+            if(i==1){
+
+
+
+            }
+
+
 //            }
         } catch (Exception e) {
             e.printStackTrace();
@@ -410,7 +426,7 @@ public class PassLove {
     @RequestMapping(path = "/passlove/dynamics/{losttype}/{date}", method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
     @ResponseBody
     public String getDynamicsByDate(@RequestParam String requestData, @PathVariable int losttype, @PathVariable int date) {
-//0昨天 1 今天 2 明天
+//0昨天 1 今天 2 更早
         int status = 200;
         JSONObject returnData = new JSONObject(true);
         List<Dynamics> dynamics = null;
@@ -459,7 +475,7 @@ public class PassLove {
     @ResponseBody
     public String getDynamicsCommented(@RequestParam String JSESSIONID) {
         JSONObject returnData = new JSONObject(true);
-        List<Dynamics> dynamics = null;
+        List<Dynamics2> dynamics = null;
         int status = 200;
         try {
             User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
@@ -814,9 +830,8 @@ public class PassLove {
     }
 
 
-//    bylinjinbo 发送短信 捡到失物的人
-
-    @RequestMapping(path = "/passlove/sendmessage", method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
+//    bylinjinbo 发送短信 捡到失物的人  我要归还
+    @RequestMapping(path = "/passlove/sendmail", method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
     @ResponseBody
     public String sendMessage(@RequestParam String JSESSIONID, @RequestParam int lostid) {
         System.out.println(lostid);
@@ -825,7 +840,8 @@ public class PassLove {
         List<Lost> data = null;
         try {
             User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
-            lostserviceimpl.sendmessage(user, lostid);
+            lostserviceimpl.sendmail(user,lostid);
+//            lostserviceimpl.sendmessage(user, lostid);
 //            lostserviceimpl.deleteLostById(lostid);
         } catch (Exception e) {
             e.printStackTrace();
@@ -859,17 +875,13 @@ public class PassLove {
     //设置消息为已读或者未读
     @RequestMapping(path = "/passlove/updatemessageisread", method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
     @ResponseBody
-    public String updateMessageIsread(@RequestParam String JSESSIONID, @RequestParam int commentid, @RequestParam int isread) {
-        System.out.println(commentid);
+    public String updateMessageIsread(@RequestParam String JSESSIONID, @RequestParam int lostid) {
         JSONObject returnData = new JSONObject(true);
         int status = 200;
         try {
             User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
-            if (isread == 1 || isread == 0) {
-                commentServiceImpl.updateisread(isread, commentid);
-            } else {
-                throw new RuntimeException();
-            }
+//                commentServiceImpl.updateisread(isread, lostid);
+                DynamicsServiceImpl.update(lostid);
         } catch (Exception e) {
             e.printStackTrace();
             status = 400;
@@ -890,7 +902,7 @@ public class PassLove {
         try {
             logger.info(requestData);
             JSONObject json = JSON.parseObject(requestData);
-//            user = userService.login(json.getString("username"), json.getString("password")); //获取用户实体
+//            user = userService.login(json.getString("username"),      json.getString("password")); //获取用户实体
             user = userServiceImpl.login2(json.getInteger("snumber"), json.getString("password")); //获取用户实体
             if (user != null) { //如果实体不为null
                 session.setAttribute("user", user);
@@ -908,4 +920,42 @@ public class PassLove {
         returnData.put("JSESSIONID", session.getId());
         return JSON.toJSONString(returnData, SerializerFeature.WriteMapNullValue);
     }
+
+//一卡通邮件
+    @RequestMapping(path = {"/passlove/user/publishlost/card"}, method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
+    @ResponseBody
+    public String publishLostCard(@RequestParam String JSESSIONID, @RequestParam String thelost, @RequestParam(name = "photos", required = false)
+            MultipartFile[] photos, HttpSession session,int  cardid) {
+        int status = 200;
+        JSONObject returnData = new JSONObject(true);
+        try {
+            User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
+            Lost lost = JSON.toJavaObject(JSON.parseObject(thelost), Lost.class);
+            System.out.println(lost);
+            lostService.publishLost(user, lost, photos, session.getServletContext().getRealPath("/WEB-INF/img/thelost"));
+            lostserviceimpl.sendcardmail(cardid);
+        } catch (Exception e) {
+            e.printStackTrace();
+            status = 400;
+        }
+        returnData.put("status", status);
+        return returnData.toJSONString();
+    }
+
+
+
+
+//    @RequestMapping(path = {"/passlove/img/thelost"})
+//    public void getThelostPhoto2(@RequestParam String name, HttpServletResponse response, HttpSession session) {
+//        try {
+//            ImageIO.write(ImageIO.read(new FileInputStream(new File("D:\\photo\\default.jpg"))),
+//                    name.substring(name.lastIndexOf(".") + 1, name.length()), response.getOutputStream());
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
+
+
+
+
 }

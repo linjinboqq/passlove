@@ -3,9 +3,12 @@ package cn.edu.cqupt.nmid.passloveserver.v1.service.impl;
 import cn.edu.cqupt.nmid.passloveserver.util.SendSmsUtil;
 import cn.edu.cqupt.nmid.passloveserver.v1.dao.CommentDao;
 import cn.edu.cqupt.nmid.passloveserver.v1.dao.LostDao;
+import cn.edu.cqupt.nmid.passloveserver.v1.dao.UserDao;
 import cn.edu.cqupt.nmid.passloveserver.v1.pojo.Lost;
 import cn.edu.cqupt.nmid.passloveserver.v1.pojo.User;
 import cn.edu.cqupt.nmid.passloveserver.v1.service.LostService;
+import cn.edu.cqupt.nmid.passloveserver.v1.service.UserService;
+import cn.edu.cqupt.nmid.passloveserver.v1.service.mail.MailService;
 import cn.edu.cqupt.nmid.passloveserver.v2.dao.mapper.ThelostMapper;
 import cn.edu.cqupt.nmid.passloveserver.v2.dao.mapper.UserLostMapper;
 import cn.edu.cqupt.nmid.passloveserver.v2.dao.mapper.UserMapper;
@@ -46,6 +49,11 @@ public class LostServiceImpl implements LostService {
     UserMapper userMapper;
     @Autowired
     SendSmsUtil smsUtil;
+    @Autowired
+    UserDao userDao;
+    @Autowired
+    MailService mailService;
+
 
     /**
      * <p>根据‘我’评论过的启事的所有id</p>
@@ -225,5 +233,35 @@ public class LostServiceImpl implements LostService {
         String phonenumber = users.get(0).getPhonenumber();
         String username1 = user.getUsername();
         smsUtil.sendSms("23212", phonenumber);
+    }
+//linjinbo
+
+    public void sendmail(User user, int lostid) throws Exception {
+        UserLostExample userLostExample = new UserLostExample();
+        userLostExample.createCriteria().andLostidEqualTo(lostid);
+        List<UserLost> userLosts = UserLostMapper.selectByExample(userLostExample);
+        UserLost userLost = userLosts.get(0);
+        String username = userLost.getUsername();
+        UserExample userExample = new UserExample();
+        userExample.createCriteria().andUsernameEqualTo(username);
+        List<cn.edu.cqupt.nmid.passloveserver.v2.pojo.User> users = userMapper.selectByExample(userExample);
+        String mail="";
+//        查出发布失物的主人
+        if(users.size()!=0) {
+            mail = users.get(0).getUsername();
+            mailService.sendMail(new String[]{mail},"失物通知","你的失物已被他人捡到,联系邮箱:"+user.getUsername());
+        }
+//        smsUtil.sendSms("23212", phonenumber);
+    }
+
+
+    public void sendcardmail(int cardid)throws Exception {
+        String s = userDao.selectUserNameBysNumber(cardid);
+        UserExample userExample = new UserExample();
+        userExample.createCriteria().andUsernameEqualTo(s);
+        List<cn.edu.cqupt.nmid.passloveserver.v2.pojo.User> users = userMapper.selectByExample(userExample);
+        if (users.size()!=0) {
+            mailService.sendMail(new String[]{s}, "失物通知", "你的学号为" + cardid + "的一卡通被他人捡到,联系电话:" +users.get(0).getPhonenumber());
+        }
     }
 }

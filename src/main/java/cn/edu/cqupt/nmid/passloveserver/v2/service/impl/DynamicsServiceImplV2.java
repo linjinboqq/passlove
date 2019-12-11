@@ -1,6 +1,7 @@
 package cn.edu.cqupt.nmid.passloveserver.v2.service.impl;
 
 import cn.edu.cqupt.nmid.passloveserver.v1.pojo.Dynamics;
+import cn.edu.cqupt.nmid.passloveserver.v1.pojo.Dynamics2;
 import cn.edu.cqupt.nmid.passloveserver.v1.pojo.User;
 import cn.edu.cqupt.nmid.passloveserver.v1.service.DynamicsService;
 import cn.edu.cqupt.nmid.passloveserver.v2.dao.mapper.DynamicsMapper;
@@ -49,7 +50,7 @@ public class DynamicsServiceImplV2 implements DynamicsService {
      * @description 获取我评论过的动态
      */
     @Override
-    public List<Dynamics> getDynamicsUserCommented(User user) throws Exception {
+    public List<Dynamics2> getDynamicsUserCommented(User user) throws Exception {
         return null;
     }
 

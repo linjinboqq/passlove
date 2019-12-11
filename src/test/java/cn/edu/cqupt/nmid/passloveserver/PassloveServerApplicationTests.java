@@ -181,7 +181,7 @@ public class PassloveServerApplicationTests {
     public void uppassword() throws Exception {
         cn.edu.cqupt.nmid.passloveserver.v1.pojo.User user = new cn.edu.cqupt.nmid.passloveserver.v1.pojo.User();
         user.setUsername("243536237@qq.com");
-        userService.updateUserNickname(user, "王昊发噶的jjhhh");
+        userService.updateUserNickname(user, "林进波");
         userService.updateUserPhonenumber(user, "18996956211");
         UserServiceImpl.updateUserPassword(user, "123123");
 
@@ -209,6 +209,21 @@ public class PassloveServerApplicationTests {
         } catch (ClientException e) {
             e.printStackTrace();
         }
+    }
+    @Test
+    public  void  date(){
+
+        Date date =new Date(); //取时间
+        Calendar calendar = new GregorianCalendar();
+        calendar.setTime(date);
+        calendar.add(calendar.DATE,-1); //把日期往后增加一天,整数  往后推,负数往前移动
+        date=calendar.getTime(); //这个时间就是日期往后推一天的结果
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat();
+        String format = simpleDateFormat.format(date);
+        System.out.println(format);
+
+
+
     }
 
 

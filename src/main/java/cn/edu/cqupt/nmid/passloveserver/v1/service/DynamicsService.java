@@ -1,6 +1,7 @@
 package cn.edu.cqupt.nmid.passloveserver.v1.service;
 
 import cn.edu.cqupt.nmid.passloveserver.v1.pojo.Dynamics;
+import cn.edu.cqupt.nmid.passloveserver.v1.pojo.Dynamics2;
 import cn.edu.cqupt.nmid.passloveserver.v1.pojo.User;
 
 import java.util.List;
@@ -36,7 +37,7 @@ public interface DynamicsService {
      * @param user 用户
      * @return
      */
-    public List<Dynamics> getDynamicsUserCommented(User user) throws Exception;
+    public List<Dynamics2> getDynamicsUserCommented(User user) throws Exception;
 
 
     /**

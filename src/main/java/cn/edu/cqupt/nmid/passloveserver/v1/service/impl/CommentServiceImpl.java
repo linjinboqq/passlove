@@ -73,6 +73,7 @@ public class CommentServiceImpl implements CommentService {
 
     //bylinjinbo
     public int getisread(int commentid) {
+        System.out.println("getisread commentid"+commentid);
         return commentDao.selectisread(commentid);
     }
 

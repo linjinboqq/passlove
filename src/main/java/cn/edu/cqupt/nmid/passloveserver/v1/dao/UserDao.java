@@ -66,6 +66,8 @@ public interface UserDao {
     @Select("SELECT snumber FROM user_snumber where username=#{username}")
     int selectsnumber(@Param("username") int username);
 
+
+
     @Insert("INSERT into user_snumber (username,snumber)VALUES(#{username},#{snumber})")
     int insertsnumber(@Param("username") String username, @Param("snumber") int snumber);
 
