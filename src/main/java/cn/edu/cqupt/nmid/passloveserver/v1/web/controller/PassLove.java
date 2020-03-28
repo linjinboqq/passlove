@@ -11,12 +11,15 @@ import cn.edu.cqupt.nmid.passloveserver.util.CodeCheck;
 import cn.edu.cqupt.nmid.passloveserver.v1.service.mail.MailService2;
 import cn.edu.cqupt.nmid.passloveserver.v1.web.listener.LoginSessionContext;
 import cn.edu.cqupt.nmid.passloveserver.v1.web.listener.RegisterSessionContext;
+import cn.edu.cqupt.nmid.passloveserver.v2.service.impl.LostServiceImplV2;
+import cn.edu.cqupt.nmid.passloveserver.v2.service.impl.UserServiceImplV2;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -79,6 +82,15 @@ public class PassLove {
     CommentServiceImpl commentServiceImpl;
     @Autowired
     UserServiceImpl userServiceImpl;
+
+    @Value("${qiniu.key.access}")
+    private String accessKey;
+    @Value("${qiniu.key.secret}")
+    private String secretKey;
+    @Value("${qiniu.bucket.header.name}")
+    private String headerBucketName;
+    @Value("${quniu.bucket.header.url}")
+    private String HeaderBucketurl;
 
 
     /**                         用户相关*                         /
@@ -168,22 +180,28 @@ public class PassLove {
 //            e.printStackTrace();
 //        }
 //    }
-//linjinbo
-    @RequestMapping(path = {"/passlove/img/user"}, produces = MediaType.IMAGE_PNG_VALUE)
-    public void getUserPhoto(@RequestParam String name, HttpServletResponse response, HttpSession session) {
+//linjinbo获取用户头像
+    @Autowired
+    UserServiceImplV2 userServiceImplV2;
 
+    @ResponseBody
+    @RequestMapping(path = {"/passlove/img/user"}, produces = {"application/json;charset=utf-8"})
+    public String getUserPhoto(@RequestParam String name, HttpSession session) {
+        int status = 200;
+        JSONObject returnData = new JSONObject(true);
+        Dynamics dynamics = null;
+        String url = "";
         try {
-//            response.setHeader("contentType","image/png");
-//            response.setContentType("image/png");
-//            ImageIO.write(ImageIO.read(new FileInputStream(session.getServletContext().getRealPath("/WEB-INF/img/user/" + name))),
-//                    name.substring(name.lastIndexOf(".") + 1, name.length()), response.getOutputStream());
-            BufferedImage image = null;
-            image = ImageIO.read(new File(imgpath + name));
-            ImageIO.write(image,name.substring(name.lastIndexOf(".") + 1, name.length()), response.getOutputStream());
+            url = userServiceImplV2.findUserUrl(name);
         } catch (Exception e) {
+            status = 400;
             e.printStackTrace();
         }
+        returnData.put("status", status);
+        returnData.put("url", url);
+        return JSON.toJSONString(returnData, SerializerFeature.WriteMapNullValue);
     }
+
 
     /**
      * @param name 图片名
@@ -203,20 +221,28 @@ public class PassLove {
 //        }
 //    }
 
-    @RequestMapping(path = {"/passlove/img/thelost"})
-    public void getThelostPhoto(@RequestParam String name, HttpServletResponse response, HttpSession session) {
+
+    @Autowired
+    LostServiceImplV2 lostServiceImplV2;
+
+    @RequestMapping(path = {"/passlove/img/thelost"}, produces = {"application/json;charset=utf-8"})
+    @ResponseBody
+    public String getThelostPhoto(@RequestParam int lostid, HttpServletResponse response, HttpSession session) {
+        int status = 200;
+        JSONObject returnData = new JSONObject(true);
+        Dynamics dynamics = null;
+        String url = "";
         try {
-//            ImageIO.write(ImageIO.read(new FileInputStream(session.getServletContext().getRealPath("/WEB-INF/img/thelost/" + name))),
-//            ImageIO.write(ImageIO.read(new FileInputStream(session.getServletContext().getRealPath("/WEB-INF/img/thelost/" + name))),
-//                    name.substring(name.lastIndexOf(".") + 1, name.length()), response.getOutputStream());
-            BufferedImage image = null;
-            image = ImageIO.read(new File(imgpath + name));
-            ImageIO.write(image,name.substring(name.lastIndexOf(".") + 1, name.length()), response.getOutputStream());
-            System.out.println("输出了" + "----"+name);
+            url = lostServiceImplV2.findlostUrl(lostid);
         } catch (Exception e) {
+            status = 400;
             e.printStackTrace();
         }
+        returnData.put("status", status);
+        returnData.put("url", url);
+        return JSON.toJSONString(returnData, SerializerFeature.WriteMapNullValue);
     }
+
 
     /**
      * @param name 图片名
@@ -229,7 +255,7 @@ public class PassLove {
 //                    name.substring(name.lastIndexOf(".") + 1, name.length()), response.getOutputStream());
             BufferedImage image = null;
             image = ImageIO.read(new File(imgpath + name));
-            ImageIO.write(image,name.substring(name.lastIndexOf(".") + 1, name.length()), response.getOutputStream());
+            ImageIO.write(image, name.substring(name.lastIndexOf(".") + 1, name.length()), response.getOutputStream());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -246,7 +272,7 @@ public class PassLove {
 //                    name.substring(name.lastIndexOf(".") + 1, name.length()), response.getOutputStream());
             BufferedImage image = null;
             image = ImageIO.read(new File(imgpath + name));
-            ImageIO.write(image,name.substring(name.lastIndexOf(".") + 1, name.length()), response.getOutputStream());
+            ImageIO.write(image, name.substring(name.lastIndexOf(".") + 1, name.length()), response.getOutputStream());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -585,17 +611,38 @@ public class PassLove {
     public String publishLost(@RequestParam String JSESSIONID, @RequestParam String thelost, @RequestParam(name = "photos", required = false) MultipartFile[] photos, HttpSession session) {
         int status = 200;
         JSONObject returnData = new JSONObject(true);
+        int lostid = -1;
         try {
 
             User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
             Lost lost = JSON.toJavaObject(JSON.parseObject(thelost), Lost.class);
-            System.out.println(lost);
-            lostService.publishLost(user, lost, photos, session.getServletContext().getRealPath("/WEB-INF/img/thelost"));
+//            lostService.publishLost(user, lost, photos, session.getServletContext().getRealPath("/WEB-INF/img/thelost"));
+            lostid = lostserviceimpl.publishLost(user, lost, photos, session.getServletContext().getRealPath("/WEB-INF/img/thelost"));
         } catch (Exception e) {
             e.printStackTrace();
             status = 400;
         }
         returnData.put("status", status);
+        returnData.put("lostid", lostid);
+        return returnData.toJSONString();
+    }
+
+    @RequestMapping(path = {"/passlove/user/publishlost2"}, method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
+    @ResponseBody
+    public String publishLost2(@RequestParam String JSESSIONID, @RequestParam String thelost, @RequestParam(name = "photos", required = false) MultipartFile photo, HttpSession session) {
+        int status = 200;
+        JSONObject returnData = new JSONObject(true);
+        int lostid = -1;
+        try {
+            User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
+            Lost lost = JSON.toJavaObject(JSON.parseObject(thelost), Lost.class);
+            lostid = lostserviceimpl.publishLost2(user, lost, photo, session.getServletContext().getRealPath("/WEB-INF/img/thelost"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            status = 400;
+        }
+        returnData.put("status", status);
+        returnData.put("lostid", lostid);
         return returnData.toJSONString();
     }
 
@@ -707,21 +754,29 @@ public class PassLove {
      * @param JSESSIONID
      * @description 修改用户头像
      */
+
+    @Autowired
+    FileService fileService;
+
     @RequestMapping(path = "/passlove/user/update/photo", method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
     @ResponseBody
     public String updateUserPhoto(@RequestParam(name = "photo") MultipartFile photo, @RequestParam String JSESSIONID, HttpSession session) {
         JSONObject returnData = new JSONObject(true);
         int status = 200;
         User user = null;
+        String url = "";
         try {
             user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user"); //获取用户
-            userService.updateUserPhoto(user, photo, session.getServletContext().getRealPath("/WEB-INF/img/user"));
+//            上传到oss
+            url = fileService.upload(photo);
+//            保存
+            userServiceImpl.updateUserPhoto(user, url);
         } catch (Exception e) {
             e.printStackTrace();
             status = 400;
         }
         returnData.put("status", status);
-        returnData.put("photo", user.getPhoto());
+        returnData.put("photo", url);
         return returnData.toJSONString();
     }
 
@@ -832,7 +887,7 @@ public class PassLove {
     @RequestMapping(path = "/passlove/UpdateLostById", method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
     @ResponseBody
     public String UpdateLostById(@RequestParam String JSESSIONID, @RequestParam String thelost,
-                                 @RequestParam(name = "photos", required = false) MultipartFile[] photos, HttpSession session,
+                                 @RequestParam(name = "photos", required = false) MultipartFile photo, HttpSession session,
                                  @RequestParam Integer lostid) {
         int status = 200;
         JSONObject returnData = new JSONObject(true);
@@ -841,7 +896,7 @@ public class PassLove {
             User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
             Lost lost = JSON.toJavaObject(JSON.parseObject(thelost), Lost.class);
             System.out.println(lost);
-            lostserviceimpl.publishLostUpdate(user, lost, photos,
+            lostserviceimpl.publishLostUpdate(user, lost, photo,
                     session.getServletContext().getRealPath("/WEB-INF/img/thelost"), lostid);
 //                lostService.publishLost(user, lost, photos, session.getServletContext().getRealPath("/WEB-INF/img/thelost"));
         } catch (Exception e) {
@@ -875,14 +930,14 @@ public class PassLove {
     //    bylinjinbo 发送短信 捡到失物的人  我要归还
     @RequestMapping(path = "/passlove/sendmail", method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
     @ResponseBody
-    public String sendMessage(@RequestParam String JSESSIONID, @RequestParam int lostid) {
+    public String sendMessage(@RequestParam String JSESSIONID, @RequestParam int lostid, @RequestParam(required = false) String QQ, @RequestParam(required = false) String phone) {
         System.out.println(lostid);
         JSONObject returnData = new JSONObject(true);
         int status = 200;
         List<Lost> data = null;
         try {
             User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
-            lostserviceimpl.sendmail(user, lostid);
+            lostserviceimpl.sendmail(user, lostid, QQ, phone);
 //            lostserviceimpl.sendmessage(user, lostid);
 //            lostserviceimpl.deleteLostById(lostid);
         } catch (Exception e) {
@@ -964,34 +1019,24 @@ public class PassLove {
     //一卡通邮件
     @RequestMapping(path = {"/passlove/user/publishlost/card"}, method = {RequestMethod.GET, RequestMethod.POST}, produces = {"application/json;charset=utf-8"})
     @ResponseBody
-    public String publishLostCard(@RequestParam String JSESSIONID, @RequestParam String thelost, @RequestParam(name = "photos", required = false)
-            MultipartFile[] photos, HttpSession session, int cardid) {
+    public String publishLostCard(@RequestParam String JSESSIONID, @RequestParam String thelost,
+                                  @RequestParam(name = "photos", required = false) MultipartFile photo,
+                                  HttpSession session, int cardid) {
         int status = 200;
         JSONObject returnData = new JSONObject(true);
+        int lostid = -1;
         try {
             User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
             Lost lost = JSON.toJavaObject(JSON.parseObject(thelost), Lost.class);
-            System.out.println(lost);
-            lostService.publishLost(user, lost, photos, session.getServletContext().getRealPath("/WEB-INF/img/thelost"));
+//            lostid = lostService.publishLost(user, lost, photos, session.getServletContext().getRealPath("/WEB-INF/img/thelost"));
+            lostid = lostserviceimpl.publishLost2(user, lost, photo, session.getServletContext().getRealPath("/WEB-INF/img/thelost"));
             lostserviceimpl.sendcardmail(cardid);
         } catch (Exception e) {
             e.printStackTrace();
             status = 400;
         }
         returnData.put("status", status);
+        returnData.put("lostid", lostid);
         return returnData.toJSONString();
     }
-
-
-//    @RequestMapping(path = {"/passlove/img/thelost"})
-//    public void getThelostPhoto2(@RequestParam String name, HttpServletResponse response, HttpSession session) {
-//        try {
-//            ImageIO.write(ImageIO.read(new FileInputStream(new File("D:\\photo\\default.jpg"))),
-//                    name.substring(name.lastIndexOf(".") + 1, name.length()), response.getOutputStream());
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
-
-
 }

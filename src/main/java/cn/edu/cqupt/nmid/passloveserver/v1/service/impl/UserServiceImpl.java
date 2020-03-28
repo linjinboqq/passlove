@@ -75,6 +75,12 @@ public class UserServiceImpl implements UserService {
         userDao.updateNickname(user, nickname);
     }
 
+    @Override
+    public void updateUserPhoto(User user, String url) throws Exception {
+        int i = userDao.updatePhoto(user.getUsername(), url);
+        System.out.println(i);
+    }
+
     /**
      * 修改用户头像
      *
@@ -82,7 +88,7 @@ public class UserServiceImpl implements UserService {
      * @param photo    上传的photo
      * @param savepath 存储位置
      */
-    @Override
+//    @Override
     public void updateUserPhoto(User user, MultipartFile photo, String savepath) throws Exception {
         String name = photo.getOriginalFilename(); //获取原文件名
         String phototype = name.substring(name.lastIndexOf("."), name.length()); //图片后缀

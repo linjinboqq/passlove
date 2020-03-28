@@ -44,10 +44,8 @@ public interface UserService {
     /**
      *  修改用户头像
      * @param user 用户
-     * @param photo 上传的photo
-     * @param savepath 存储位置
      * */
-    public void updateUserPhoto(User user, MultipartFile photo, String savepath) throws Exception;
+    public void updateUserPhoto(User user, String url) throws Exception;
 
 
     /**

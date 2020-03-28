@@ -1,15 +1,18 @@
 package cn.edu.cqupt.nmid.passloveserver.v2.service.impl;
 
+import cn.edu.cqupt.nmid.passloveserver.v1.dao.UserDao;
 import cn.edu.cqupt.nmid.passloveserver.v1.pojo.User;
 import cn.edu.cqupt.nmid.passloveserver.v1.service.UserService;
 import cn.edu.cqupt.nmid.passloveserver.util.PojoUtil;
 import cn.edu.cqupt.nmid.passloveserver.v2.dao.mapper.UserMapper;
 import cn.edu.cqupt.nmid.passloveserver.v2.pojo.UserExample;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.net.URL;
 import java.util.List;
 
 /**
@@ -82,26 +85,34 @@ public class UserServiceImplV2 implements UserService {
      * 修改用户头像
      *
      * @param user     用户
-     * @param photo    上传的photo
-     * @param savepath 存储位置
      */
-    @Override
-    public void updateUserPhoto(User user, MultipartFile photo, String savepath) throws Exception {
-        String name = photo.getOriginalFilename();
-        String phototype = name.substring(name.lastIndexOf("."), name.length()); //图片后缀
-        String filename = user.getUsername() + phototype; //图片名
-        File file = new File(savepath, filename);
-        if(file.exists()) {
-            file.deleteOnExit();
-        }
-        photo.transferTo(file);
-        cn.edu.cqupt.nmid.passloveserver.v2.pojo.User userV2 = new cn.edu.cqupt.nmid.passloveserver.v2.pojo.User();
-        userV2.setUsername(user.getUsername());
-        userV2.setPhoto(filename);
-        userMapper.updateByPrimaryKeySelective(userV2);
-        user.setPhoto(filename);
 
+//    public void updateUserPhoto(User user, MultipartFile photo, String savepath) throws Exception {
+//        String name = photo.getOriginalFilename();
+//        String phototype = name.substring(name.lastIndexOf("."), name.length()); //图片后缀
+//        String filename = user.getUsername() + phototype; //图片名
+//        File file = new File(savepath, filename);
+//        if(file.exists()) {
+//            file.deleteOnExit();
+//        }
+//        photo.transferTo(file);
+//        cn.edu.cqupt.nmid.passloveserver.v2.pojo.User userV2 = new cn.edu.cqupt.nmid.passloveserver.v2.pojo.User();
+//        userV2.setUsername(user.getUsername());
+//        userV2.setPhoto(filename);
+//        userMapper.updateByPrimaryKeySelective(userV2);
+//        user.setPhoto(filename);
+//
+//    }
+    //bylinjinbo
+    @Autowired
+    UserDao userDao;
+
+    @Override
+    public void updateUserPhoto(User user, String url) throws Exception {
+        int i = userDao.updatePhoto(user.getUsername(), url);
+        System.out.println(i);
     }
+
 
     /**
      * 修改用户电话号码
@@ -116,4 +127,12 @@ public class UserServiceImplV2 implements UserService {
         userV2.setPhonenumber(phonenumber);
         userMapper.updateByPrimaryKeySelective(userV2);
     }
+
+    public String findUserUrl(String username) {
+        UserExample userExample = new UserExample();
+        userExample.createCriteria().andUsernameEqualTo(username);
+        List<cn.edu.cqupt.nmid.passloveserver.v2.pojo.User> users = userMapper.selectByExample(userExample);
+        return users.isEmpty() ? null : users.get(0).getPhoto();
+    }
+
 }

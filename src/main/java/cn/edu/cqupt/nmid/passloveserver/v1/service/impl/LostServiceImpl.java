@@ -3,9 +3,11 @@ package cn.edu.cqupt.nmid.passloveserver.v1.service.impl;
 import cn.edu.cqupt.nmid.passloveserver.util.SendSmsUtil;
 import cn.edu.cqupt.nmid.passloveserver.v1.dao.CommentDao;
 import cn.edu.cqupt.nmid.passloveserver.v1.dao.LostDao;
+import cn.edu.cqupt.nmid.passloveserver.v1.dao.LostUrlDao;
 import cn.edu.cqupt.nmid.passloveserver.v1.dao.UserDao;
 import cn.edu.cqupt.nmid.passloveserver.v1.pojo.Lost;
 import cn.edu.cqupt.nmid.passloveserver.v1.pojo.User;
+import cn.edu.cqupt.nmid.passloveserver.v1.service.FileService;
 import cn.edu.cqupt.nmid.passloveserver.v1.service.LostService;
 import cn.edu.cqupt.nmid.passloveserver.v1.service.UserService;
 import cn.edu.cqupt.nmid.passloveserver.v1.service.mail.MailService;
@@ -15,6 +17,7 @@ import cn.edu.cqupt.nmid.passloveserver.v2.dao.mapper.UserMapper;
 import cn.edu.cqupt.nmid.passloveserver.v2.pojo.*;
 import org.apache.ibatis.annotations.Update;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +34,7 @@ import java.util.List;
  * @Date 2019/3/12 12:27
  *****/
 @Service
+@Primary
 public class LostServiceImpl implements LostService {
 
     @Resource(name = "sdf")
@@ -103,9 +107,15 @@ public class LostServiceImpl implements LostService {
      * @param path
      * @description 发布失物
      */
+    @Autowired
+    FileService fileService;
+
+    @Autowired
+    LostUrlDao lostUrlDao;
+
     @Transactional(rollbackFor = {Exception.class})
     @Override
-    public void publishLost(User user, Lost lost, MultipartFile[] photos, String path) throws Exception {
+    public int publishLost(User user, Lost lost, MultipartFile[] photos, String path) throws Exception {
         String fnames = "";
         File[] files = null;
         int length = 0;
@@ -132,7 +142,6 @@ public class LostServiceImpl implements LostService {
             lost.setPublishtime(sdf.format(System.currentTimeMillis()));
             lostDao.insertLost(lost);
         }
-
         lost.setPhoto(fnames);
         lostDao.updatePhoto(lost);
         lostDao.insertUserLost(user, lost.getId());
@@ -140,6 +149,29 @@ public class LostServiceImpl implements LostService {
 //            ossClient.putObject("passlove", "thelost/" + files[i].getName(), photos[i].getInputStream()); //oss上传
             photos[i].transferTo(files[i]);
         }
+        return lost.getId();
+    }
+
+
+    @Transactional(rollbackFor = {Exception.class})
+    public int publishLost2(User user, Lost lost, MultipartFile photos, String path) throws Exception {
+        String url = "";
+        File[] files = null;
+        int length = 0;
+        if (photos != null) {
+            url = fileService.upload(photos);
+            System.out.println("图片url" + "---------" + url);
+            lost.setPhoto(url);
+        }
+        lost.setPublishtime(sdf.format(System.currentTimeMillis()));
+        lostDao.insertLost(lost);
+        lostDao.updatePhoto(lost);
+        lostDao.insertUserLost(user, lost.getId());
+//        for (int i = 0; i < length; i++) {
+//            ossClient.putObject("passlove", "thelost/" + files[i].getName(), photos[i].getInputStream()); //oss上传
+//            photos[i].transferTo(files[i]);
+//        }
+        return lost.getId();
     }
 
 
@@ -156,9 +188,9 @@ public class LostServiceImpl implements LostService {
 
     //    bylinjinbo
     @Transactional(rollbackFor = {Exception.class})
-    public void publishLostUpdate(User user, Lost lost, MultipartFile[] photos, String path, int lostid) throws Exception {
+    public void publishLostUpdate(User user, Lost lost, MultipartFile photos, String path, int lostid) throws Exception {
         lost.setId(lostid);
-        String fnames = "";
+        String url = "";
         File[] files = null;
         int length = 0;
         Thelost thelost = new Thelost();
@@ -184,40 +216,18 @@ public class LostServiceImpl implements LostService {
         thelost.setId(lostid);
         thelostMapper.updateByPrimaryKeySelective(thelost);
         if (photos != null) {
-            length = photos.length;
-            files = new File[length];
-            lost.setPublishtime(sdf.format(System.currentTimeMillis()));
-//        lostDao.insertLost(lost);
-//            ThelostExample thelostExample = new ThelostExample();
-//            thelostExample.createCriteria()
-            thelostMapper.updateByPrimaryKeySelective(thelost);
-            for (int i = 0; i < length; i++) {
-                if (!photos[i].isEmpty()) {
-                    String name = photos[i].getOriginalFilename(); //获取原文件名
-                    String phototype = name.substring(name.lastIndexOf("."), name.length()); //图片后缀
-                    String filename = lost.getId() + "_" + i + phototype;
-                    if (i == length - 1) {
-                        fnames += filename;
-                    } else {
-                        fnames += filename + ",";
-                    }
-                    File file = new File(path, filename); //新文件
-                    files[i] = file;
-                }
+            if (photos != null) {
+                url = fileService.upload(photos);
+                System.out.println("图片url" + "---------" + url);
+                lost.setPhoto(url);
             }
         } else {
             lost.setPublishtime(sdf.format(System.currentTimeMillis()));
 //        lostDao.insertLost(lost);
             thelostMapper.updateByPrimaryKeySelective(thelost);
         }
-        lost.setPhoto(fnames);
+        lost.setPhoto(url);
         lostDao.updatePhoto(lost);
-//        lostDao.insertUserLost(user, lost.getId());
-
-        for (int i = 0; i < length; i++) {
-//            ossClient.putObject("passlove", "thelost/" + files[i].getName(), photos[i].getInputStream()); //oss上传
-            photos[i].transferTo(files[i]);
-        }
     }
 
     //    bylinjinbo  发短信 还没搞模板
@@ -236,32 +246,41 @@ public class LostServiceImpl implements LostService {
     }
 //linjinbo
 
-    public void sendmail(User user, int lostid) throws Exception {
+    public void sendmail(User user, int lostid, String qq, String phone) throws Exception {
         UserLostExample userLostExample = new UserLostExample();
         userLostExample.createCriteria().andLostidEqualTo(lostid);
         List<UserLost> userLosts = UserLostMapper.selectByExample(userLostExample);
+
         UserLost userLost = userLosts.get(0);
         String username = userLost.getUsername();
         UserExample userExample = new UserExample();
         userExample.createCriteria().andUsernameEqualTo(username);
         List<cn.edu.cqupt.nmid.passloveserver.v2.pojo.User> users = userMapper.selectByExample(userExample);
-        String mail="";
+        String mail = "";
 //        查出发布失物的主人
-        if(users.size()!=0) {
+        StringBuffer sb;
+        if (users.size() != 0) {
             mail = users.get(0).getUsername();
-            mailService.sendMail(new String[]{mail},"失物通知","你的失物已被他人捡到,联系邮箱:"+user.getUsername());
+            sb = new StringBuffer("你的失物已被他人捡到,联系邮箱:" + user.getUsername() + "\t");
+            if (qq != null && !qq.equals("")) {
+                sb.append("QQ:" + qq);
+
+            }
+            if (phone != null && !phone.equals("")) {
+                sb.append("电话:" + phone);
+            }
+            mailService.sendMail(new String[]{mail}, "失物通知", sb.toString());
         }
-//        smsUtil.sendSms("23212", phonenumber);
     }
 
 
-    public void sendcardmail(int cardid)throws Exception {
+    public void sendcardmail(int cardid) throws Exception {
         String s = userDao.selectUserNameBysNumber(cardid);
         UserExample userExample = new UserExample();
         userExample.createCriteria().andUsernameEqualTo(s);
         List<cn.edu.cqupt.nmid.passloveserver.v2.pojo.User> users = userMapper.selectByExample(userExample);
-        if (users.size()!=0) {
-            mailService.sendMail(new String[]{s}, "失物通知", "你的学号为" + cardid + "的一卡通被他人捡到,联系电话:" +users.get(0).getPhonenumber());
+        if (users.size() != 0) {
+            mailService.sendMail(new String[]{s}, "失物通知", "你的学号为" + cardid + "的一卡通被他人捡到,联系电话:" + users.get(0).getPhonenumber());
         }
     }
 }

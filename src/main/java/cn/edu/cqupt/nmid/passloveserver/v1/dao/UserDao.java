@@ -51,7 +51,7 @@ public interface UserDao {
      * @param photo    照片名
      */
     @Update("update user set photo=#{photo} where username=#{username}")
-    public void updatePhoto(@Param("username") String username, @Param("photo") String photo);
+    public int updatePhoto(@Param("username") String username, @Param("photo") String photo);
 
     @Update("update user set phonenumber=#{phonenumber} where username=#{user.username}")
     @SelectKey(statement = "select phonenumber from user where username=#{user.username}", keyProperty = "user.phonenumber", before = false, resultType = String.class)

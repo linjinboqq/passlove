@@ -226,5 +226,11 @@ public class PassloveServerApplicationTests {
 
     }
 
-
+    @Test
+    public  void  userphoto(){
+        UserExample userExample = new UserExample();
+        userExample.createCriteria().andUsernameEqualTo("243536237@qq.com");
+        List<cn.edu.cqupt.nmid.passloveserver.v2.pojo.User> users = userMapper.selectByExample(userExample);
+        System.out.println( users.get(0).getPhoto()+"------");
+    }
 }

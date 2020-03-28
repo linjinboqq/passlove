@@ -6,6 +6,9 @@ import cn.edu.cqupt.nmid.passloveserver.v1.pojo.Dynamics;
 import cn.edu.cqupt.nmid.passloveserver.v1.pojo.Dynamics2;
 import cn.edu.cqupt.nmid.passloveserver.v1.pojo.User;
 import cn.edu.cqupt.nmid.passloveserver.v1.service.DynamicsService;
+import cn.edu.cqupt.nmid.passloveserver.v2.dao.mapper.UserLostCommentMapper;
+import cn.edu.cqupt.nmid.passloveserver.v2.pojo.UserLostComment;
+import cn.edu.cqupt.nmid.passloveserver.v2.pojo.UserLostCommentExample;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -106,6 +109,8 @@ public class DynamicsServiceImpl implements DynamicsService {
      */
     @Autowired
     CommentServiceImpl commentServiceImpl;
+    @Autowired
+    UserLostCommentMapper    userLostCommentMapper;
 
     //linjinbo
     @Override
@@ -118,9 +123,11 @@ public class DynamicsServiceImpl implements DynamicsService {
             System.out.println("dynamics.size("+dynamics.size());
             List<Commentp> comments = commentServiceImpl.getCommentsByID(dynamics.get(i).getThelost().getId());
 //            commentsreads = new int[comments.size()];
+
             int commentread = 1;
             for (int j = 0; j < comments.size(); j++) {
-                int getisread = commentServiceImpl.getisread(comments.get(j).getComment().getId());
+                Integer id = comments.get(j).getComment().getId();
+                int getisread = commentServiceImpl.getisread(id);
                 if (getisread == 0) {
                     commentread = 0;
                     break;
@@ -140,7 +147,6 @@ public class DynamicsServiceImpl implements DynamicsService {
         for (int i = 0; i <commentsByID.size() ; i++) {
             Integer id = commentsByID.get(i).getComment().getId();
             commentServiceImpl.updateisread(1,id);
-            System.out.println(" commenid "+id);
         }
     }
 

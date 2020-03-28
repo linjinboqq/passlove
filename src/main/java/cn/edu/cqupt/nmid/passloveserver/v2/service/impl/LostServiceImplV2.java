@@ -3,8 +3,16 @@ package cn.edu.cqupt.nmid.passloveserver.v2.service.impl;
 import cn.edu.cqupt.nmid.passloveserver.v1.pojo.Lost;
 import cn.edu.cqupt.nmid.passloveserver.v1.pojo.User;
 import cn.edu.cqupt.nmid.passloveserver.v1.service.LostService;
+import cn.edu.cqupt.nmid.passloveserver.v2.dao.mapper.ThelostMapper;
+import cn.edu.cqupt.nmid.passloveserver.v2.dao.mapper.UserMapper;
+import cn.edu.cqupt.nmid.passloveserver.v2.pojo.Thelost;
+import cn.edu.cqupt.nmid.passloveserver.v2.pojo.ThelostExample;
+import cn.edu.cqupt.nmid.passloveserver.v2.pojo.UserExample;
+import cn.edu.cqupt.nmid.passloveserver.v2.pojo.UserLostExample;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -13,6 +21,7 @@ import java.util.List;
  * \* Time: 21:16
  * \* Description:
  **/
+@Service
 public class LostServiceImplV2 implements LostService {
 
     /**
@@ -50,15 +59,20 @@ public class LostServiceImplV2 implements LostService {
         return null;
     }
 
-    /**
-     * @param user   用户
-     * @param lost   失物
-     * @param photos
-     * @param path
-     * @description 发布失物
-     */
     @Override
-    public void publishLost(User user, Lost lost, MultipartFile[] photos, String path) throws Exception {
-
+    public int publishLost(User user, Lost lost, MultipartFile[] photos, String path) throws Exception {
+        return -1;
     }
+
+
+    @Resource
+    private ThelostMapper thelostMapper;
+
+    public String findlostUrl(int id) {
+        ThelostExample thelostExample = new ThelostExample();
+        thelostExample.createCriteria().andIdEqualTo(id);
+        List<Thelost> thelosts = thelostMapper.selectByExample(thelostExample);
+        return thelosts.isEmpty() ? null : thelosts.get(0).getPhoto();
+    }
+
 }

@@ -44,6 +44,6 @@ public interface LostService {
      * @param user 用户
      * @param lost 失物
      * */
-    public void publishLost(User user, Lost lost, MultipartFile[] photos, String path) throws Exception;
+    public int publishLost(User user, Lost lost, MultipartFile [] photos, String path) throws Exception;
 
 }
