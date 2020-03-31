@@ -80,4 +80,9 @@ public class CommentServiceImpl implements CommentService {
     public int updateisread(int isread,int commentid) {
         return commentDao.updateisread(isread,commentid);
     }
+
+    public List<Commentp> getCommentsByIDandUsername(int lostid, String username) {
+      return   commentpDao.getCommentpByLostidandUsername(lostid, username);
+
+    }
 }

@@ -142,8 +142,8 @@ public class DynamicsServiceImpl implements DynamicsService {
     }
 
 
-    public void update(int lostid) throws Exception{
-        List<Commentp> commentsByID = commentServiceImpl.getCommentsByID(lostid);
+    public void update(int lostid,String username) throws Exception{
+        List<Commentp> commentsByID = commentServiceImpl.getCommentsByIDandUsername(lostid,username);
         for (int i = 0; i <commentsByID.size() ; i++) {
             Integer id = commentsByID.get(i).getComment().getId();
             commentServiceImpl.updateisread(1,id);

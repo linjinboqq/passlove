@@ -978,7 +978,7 @@ public class PassLove {
         try {
             User user = (User) loginSessionContext.getSession(JSESSIONID).getAttribute("user");
 //                commentServiceImpl.updateisread(isread, lostid);
-            DynamicsServiceImpl.update(lostid);
+            DynamicsServiceImpl.update(lostid,user.getUsername());
         } catch (Exception e) {
             e.printStackTrace();
             status = 400;

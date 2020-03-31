@@ -13,10 +13,14 @@ public interface CommentpDao {
 
     /**
      * <p>根据失物id获取它的所有评论</p>
+     *
      * @param lostid 失物id
-     * */
+     */
     @Select("select * from commentp where lostid=#{lostid}")
     @Options(useCache = false)
     public List<Commentp> getCommentpByLostid(@Param("lostid") int lostid) throws Exception;
 
+    @Select("select * from commentp where lostid=#{lostid} and username=#{username}")
+    @Options(useCache = false)
+    List<Commentp> getCommentpByLostidandUsername(int lostid, String username);
 }
